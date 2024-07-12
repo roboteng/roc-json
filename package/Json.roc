@@ -656,7 +656,7 @@ decodeF32 = Decode.custom \bytes, @Json {} ->
 
 # Test decode of F32
 expect
-    actual : DecodeResult F32
+    actual : DecodeResult F32 [TooShort]
     actual = Str.toUtf8 "12.34e-5" |> Decode.fromBytesPartial utf8
     numStr = actual.result |> Result.map Num.toStr
 
@@ -675,7 +675,7 @@ decodeF64 = Decode.custom \bytes, @Json {} ->
 
 # Test decode of F64
 expect
-    actual : DecodeResult F64
+    actual : DecodeResult F64 [TooShort]
     actual = Str.toUtf8 "12.34e-5" |> Decode.fromBytesPartial utf8
     numStr = actual.result |> Result.map Num.toStr
 
@@ -694,7 +694,7 @@ decodeDec = Decode.custom \bytes, @Json {} ->
 
 # Test decode of Dec
 expect
-    actual : DecodeResult Dec
+    actual : DecodeResult Dec [TooShort]
     actual = Str.toUtf8 "12.0034" |> Decode.fromBytesPartial utf8
 
     actual.result == Ok 12.0034dec
@@ -766,7 +766,7 @@ expect
 
     actual.result == expected
 
-parseExactChar : List U8, U8 -> DecodeResult {}
+parseExactChar : List U8, U8 -> DecodeResult {} [TooShort]
 parseExactChar = \bytes, char ->
     when List.get bytes 0 is
         Ok c ->
@@ -779,19 +779,19 @@ parseExactChar = \bytes, char ->
 
         Err _ -> { result: Err TooShort, rest: bytes }
 
-openBracket : List U8 -> DecodeResult {}
+openBracket : List U8 -> DecodeResult {} [TooShort]
 openBracket = \bytes -> parseExactChar bytes '['
 
-closingBracket : List U8 -> DecodeResult {}
+closingBracket : List U8 -> DecodeResult {} [TooShort]
 closingBracket = \bytes -> parseExactChar bytes ']'
 
-anything : List U8 -> DecodeResult {}
+anything : List U8 -> DecodeResult {} [TooShort]
 anything = \bytes -> { result: Err TooShort, rest: bytes }
 
-comma : List U8 -> DecodeResult {}
+comma : List U8 -> DecodeResult {} [TooShort]
 comma = \bytes -> parseExactChar bytes ','
 
-tryDecode : DecodeResult a, ({ val : a, rest : List U8 } -> DecodeResult b) -> DecodeResult b
+tryDecode : DecodeResult a [TooShort], ({ val : a, rest : List U8 } -> DecodeResult b [TooShort]) -> DecodeResult b [TooShort]
 tryDecode = \{ result, rest }, mapper ->
     when result is
         Ok val -> mapper { val, rest }
@@ -907,96 +907,96 @@ expect
     actual == expected
 
 expect
-    actual : DecodeResult U16
+    actual : DecodeResult U16 [TooShort]
     actual = "+1" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = { result: Err TooShort, rest: ['+', '1'] }
     actual == expected
 
 expect
-    actual : DecodeResult U16
+    actual : DecodeResult U16 [TooShort]
     actual = ".0" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = { result: Err TooShort, rest: ['.', '0'] }
     actual == expected
 
 expect
-    actual : DecodeResult U64
+    actual : DecodeResult U64 [TooShort]
     actual = "-.1" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     actual.result == Err TooShort
 
 expect
-    actual : DecodeResult Dec
+    actual : DecodeResult Dec [TooShort]
     actual = "72" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = Ok 72dec
     actual.result == expected
 
 expect
-    actual : DecodeResult Dec
+    actual : DecodeResult Dec [TooShort]
     actual = "-0" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = Ok 0dec
     actual.result == expected
 
 expect
-    actual : DecodeResult Dec
+    actual : DecodeResult Dec [TooShort]
     actual = "-7" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = Ok -7dec
     actual.result == expected
 
 expect
-    actual : DecodeResult Dec
+    actual : DecodeResult Dec [TooShort]
     actual = "-0\n" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = { result: Ok 0dec, rest: ['\n'] }
     actual == expected
 
 expect
-    actual : DecodeResult Dec
+    actual : DecodeResult Dec [TooShort]
     actual = "123456789000 \n" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = { result: Ok 123456789000dec, rest: [' ', '\n'] }
     actual == expected
 
 expect
-    actual : DecodeResult Dec
+    actual : DecodeResult Dec [TooShort]
     actual = "-12.03" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = Ok -12.03
     actual.result == expected
 
 expect
-    actual : DecodeResult U64
+    actual : DecodeResult U64 [TooShort]
     actual = "-12." |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = Err TooShort
     actual.result == expected
 
 expect
-    actual : DecodeResult U64
+    actual : DecodeResult U64 [TooShort]
     actual = "01.1" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = Err TooShort
     actual.result == expected
 
 expect
-    actual : DecodeResult U64
+    actual : DecodeResult U64 [TooShort]
     actual = ".0" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = Err TooShort
     actual.result == expected
 
 expect
-    actual : DecodeResult U64
+    actual : DecodeResult U64 [TooShort]
     actual = "1.e1" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = Err TooShort
     actual.result == expected
 
 expect
-    actual : DecodeResult U64
+    actual : DecodeResult U64 [TooShort]
     actual = "-1.2E" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = Err TooShort
     actual.result == expected
 
 expect
-    actual : DecodeResult U64
+    actual : DecodeResult U64 [TooShort]
     actual = "0.1e+" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = Err TooShort
     actual.result == expected
 
 expect
-    actual : DecodeResult U64
+    actual : DecodeResult U64 [TooShort]
     actual = "-03" |> Str.toUtf8 |> Decode.fromBytesPartial utf8
     expected = Err TooShort
     actual.result == expected
@@ -1248,7 +1248,7 @@ expect
 expect
     input = Str.toUtf8 "null"
 
-    actual : DecodeResult Str
+    actual : DecodeResult Str [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     Result.isErr actual.result
@@ -1360,7 +1360,7 @@ ArrayClosingState : [
 expect
     input = Str.toUtf8 "[ ]"
 
-    actual : DecodeResult (List U8)
+    actual : DecodeResult (List U8) [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     actual.result == Ok []
@@ -1369,7 +1369,7 @@ expect
 expect
     input = Str.toUtf8 "\n[\t 1 , 2  , 3]"
 
-    actual : DecodeResult (List U64)
+    actual : DecodeResult (List U64) [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok [1, 2, 3]
@@ -1380,7 +1380,7 @@ expect
 expect
     input = Str.toUtf8 "\n\t [\n \"one\"\r , \"two\" , \n\"3\"\t]"
 
-    actual : DecodeResult (List Str)
+    actual : DecodeResult (List Str) [TooShort]
     actual = Decode.fromBytesPartial input utf8
     expected = Ok ["one", "two", "3"]
 
@@ -1392,7 +1392,7 @@ expect
 
     decoder = utf8With { fieldNameMapping: SnakeCase }
 
-    actual : DecodeResult (List { fieldName : U64 })
+    actual : DecodeResult (List { fieldName : U64 }) [TooShort]
     actual = Decode.fromBytesPartial input decoder
 
     expected = Ok [{ fieldName: 1 }]
@@ -1405,7 +1405,7 @@ expect
 
     decoder = utf8With { skipMissingProperties: Bool.false }
 
-    actual : DecodeResult (List { fieldName : U64 })
+    actual : DecodeResult (List { fieldName : U64 }) [TooShort]
     actual = Decode.fromBytesPartial input decoder
 
     expected = Err TooShort
@@ -1557,7 +1557,7 @@ SkipValueState : [
 # Test decode of partial record
 expect
     input = Str.toUtf8 "{\"extraField\":2, \"ownerName\": \"Farmer Joe\"}"
-    actual : DecodeResult { ownerName : Str }
+    actual : DecodeResult { ownerName : Str } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { ownerName: "Farmer Joe" }
@@ -1568,7 +1568,7 @@ expect
 # Test decode of partial record in list additional field last
 expect
     input = Str.toUtf8 "[{\"ownerName\": \"Farmer Joe\", \"extraField\":2}]"
-    actual : DecodeResult (List { ownerName : Str })
+    actual : DecodeResult (List { ownerName : Str }) [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok [{ ownerName: "Farmer Joe" }]
@@ -1579,7 +1579,7 @@ expect
 # Test decode of partial record in record partial field last
 expect
     input = Str.toUtf8 "{\"value\": {\"ownerName\": \"Farmer Joe\",\"extraField\":2}}"
-    actual : DecodeResult { value : { ownerName : Str } }
+    actual : DecodeResult { value : { ownerName : Str } } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { value: { ownerName: "Farmer Joe" } }
@@ -1590,7 +1590,7 @@ expect
 # Test decode of partial record in partial record additional fields last
 expect
     input = Str.toUtf8 "{\"value\": {\"ownerName\": \"Farmer Joe\", \"extraField\":2}, \"extraField\":2}"
-    actual : DecodeResult { value : { ownerName : Str } }
+    actual : DecodeResult { value : { ownerName : Str } } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { value: { ownerName: "Farmer Joe" } }
@@ -1601,7 +1601,7 @@ expect
 # Test decode of partial record with multiple additional fields
 expect
     input = Str.toUtf8 "{\"extraField\":2, \"ownerName\": \"Farmer Joe\", \"extraField2\":2 }"
-    actual : DecodeResult { ownerName : Str }
+    actual : DecodeResult { ownerName : Str } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { ownerName: "Farmer Joe" }
@@ -1612,7 +1612,7 @@ expect
 # Test decode of partial record with string value
 expect
     input = Str.toUtf8 "{\"extraField\": \"abc\", \"ownerName\": \"Farmer Joe\"}"
-    actual : DecodeResult { ownerName : Str }
+    actual : DecodeResult { ownerName : Str } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { ownerName: "Farmer Joe" }
@@ -1623,7 +1623,7 @@ expect
 # Test decode of partial record with string value with a comma
 expect
     input = Str.toUtf8 "{\"extraField\": \"a,bc\", \"ownerName\": \"Farmer Joe\"}"
-    actual : DecodeResult { ownerName : Str }
+    actual : DecodeResult { ownerName : Str } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { ownerName: "Farmer Joe" }
@@ -1634,7 +1634,7 @@ expect
 # Test decode of partial record with string value with an escaped "
 expect
     input = Str.toUtf8 "{\"extraField\": \"a\\\"bc\", \"ownerName\": \"Farmer Joe\"}"
-    actual : DecodeResult { ownerName : Str }
+    actual : DecodeResult { ownerName : Str } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { ownerName: "Farmer Joe" }
@@ -1645,7 +1645,7 @@ expect
 # Test decode of partial record with an array
 expect
     input = Str.toUtf8 "{\"extraField\": [1,2,3], \"ownerName\": \"Farmer Joe\"}"
-    actual : DecodeResult { ownerName : Str }
+    actual : DecodeResult { ownerName : Str } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { ownerName: "Farmer Joe" }
@@ -1656,7 +1656,7 @@ expect
 # Test decode of partial record with a nested array
 expect
     input = Str.toUtf8 "{\"extraField\": [1,[4,5,[[9],6,7]],3], \"ownerName\": \"Farmer Joe\"}"
-    actual : DecodeResult { ownerName : Str }
+    actual : DecodeResult { ownerName : Str } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { ownerName: "Farmer Joe" }
@@ -1667,7 +1667,7 @@ expect
 # Test decode of partial record with a nested array with strings inside
 expect
     input = Str.toUtf8 "{\"extraField\": [\"a\", [\"bc]]]def\"]], \"ownerName\": \"Farmer Joe\"}"
-    actual : DecodeResult { ownerName : Str }
+    actual : DecodeResult { ownerName : Str } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { ownerName: "Farmer Joe" }
@@ -1678,7 +1678,7 @@ expect
 # Test decode of partial record with a nested array with escaped strings inside
 expect
     input = Str.toUtf8 "{\"extraField\": [\"a\", [\"b\\cdef\"]], \"ownerName\": \"Farmer Joe\"}"
-    actual : DecodeResult { ownerName : Str }
+    actual : DecodeResult { ownerName : Str } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { ownerName: "Farmer Joe" }
@@ -1689,7 +1689,7 @@ expect
 # Test decode of partial record with an object
 expect
     input = Str.toUtf8 "{\"extraField\": { \"fieldA\": 6 }, \"ownerName\": \"Farmer Joe\"}"
-    actual : DecodeResult { ownerName : Str }
+    actual : DecodeResult { ownerName : Str } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { ownerName: "Farmer Joe" }
@@ -1700,7 +1700,7 @@ expect
 # Test decode of partial record with a nested object
 expect
     input = Str.toUtf8 "{\"extraField\": { \"fieldA\": 6, \"nested\": { \"nestField\": \"abcd\" } }, \"ownerName\": \"Farmer Joe\"}"
-    actual : DecodeResult { ownerName : Str }
+    actual : DecodeResult { ownerName : Str } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { ownerName: "Farmer Joe" }
@@ -1711,7 +1711,7 @@ expect
 # Test decode of partial record with a nested object and string
 expect
     input = Str.toUtf8 "{\"extraField\": { \"fieldA\": 6, \"nested\": { \"nestField\": \"ab}}}}}cd\" } }, \"ownerName\": \"Farmer Joe\"}"
-    actual : DecodeResult { ownerName : Str }
+    actual : DecodeResult { ownerName : Str } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { ownerName: "Farmer Joe" }
@@ -1722,7 +1722,7 @@ expect
 # Test decode of partial record with a nested object and string ending with an escaped char
 expect
     input = Str.toUtf8 "{\"extraField\": { \"fieldA\": 6, \"nested\": { \"nestField\": \"ab\\cd\" } }, \"ownerName\": \"Farmer Joe\"}"
-    actual : DecodeResult { ownerName : Str }
+    actual : DecodeResult { ownerName : Str } [TooShort]
     actual = Decode.fromBytesPartial input utf8
 
     expected = Ok { ownerName: "Farmer Joe" }
